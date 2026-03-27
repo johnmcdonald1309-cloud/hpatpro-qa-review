@@ -1,260 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HPATPro — QA Review</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; line-height: 1.6; }
-    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .header h1 { font-size: 24px; font-weight: 700; }
-    .header .sub { font-size: 13px; opacity: 0.7; margin-top: 4px; }
-    .stats-bar { display: flex; gap: 20px; padding: 14px 40px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; align-items: center; }
-    .stat { text-align: center; padding: 6px 14px; }
-    .stat .num { font-size: 22px; font-weight: 700; color: #0f3460; }
-    .stat .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
-    .filters { padding: 12px 40px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .fbtn { padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; transition: all 0.2s; }
-    .fbtn:hover { border-color: #0f3460; }
-    .fbtn.active { background: #0f3460; color: white; border-color: #0f3460; }
-    .flabel { font-size: 12px; color: #666; font-weight: 600; margin-right: 4px; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 20px 40px 80px; }
-    .loading { text-align: center; padding: 60px; font-size: 18px; color: #666; }
-    .section-divider { margin: 28px 0 14px; padding: 12px 18px; color: white; border-radius: 8px; font-size: 16px; font-weight: 600; }.qcard { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border-left: 4px solid #ccc; transition: border-color 0.3s; }
-    .qcard.submitted { border-left-color: #22c55e; }
-    .card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #fafafa; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 8px; }
-    .card-head .code { font-weight: 700; font-size: 14px; color: #0f3460; }
-    .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-    .badge { padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-    .badge.s1 { background: #ede9fe; color: #7c3aed; }
-    .badge.s2 { background: #dbeafe; color: #2563eb; }
-    .badge.s3 { background: #d1fae5; color: #059669; }
-    .badge.cat { background: #f3e8ff; color: #7c3aed; }
-    .badge.visual { background: #fef3c7; color: #92400e; }
-    .card-body { padding: 18px; }
-    .stimulus { padding: 12px 16px; background: #f8f9fb; border-left: 3px solid #94a3b8; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #334155; line-height: 1.6; }
-    .stimulus .stim-label { font-weight: 600; color: #475569; margin-bottom: 6px; }
-    .stimulus svg { max-width: 100%; height: auto; }
-    .question { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
-    .question:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .question .qtext { font-weight: 600; color: #1e293b; font-size: 13px; margin-bottom: 8px; }
-    .question .opts { margin-left: 12px; }
-    .question .opt { padding: 4px 0; font-size: 12px; color: #475569; margin-bottom: 4px; }
-    .question .opt input { margin-right: 6px; }
-    .question .exp { display: none; margin: 8px 0 8px 20px; padding: 8px 12px; background: #f1f5f9; border-left: 2px solid #cbd5e1; color: #475569; font-size: 12px; }
-    .question .opt.sel + .exp { display: block; }
-    .feedback-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
-    .feedback-header { font-weight: 700; color: #1e293b; font-size: 13px; margin-bottom: 10px; }
-    .feedback-list { display: flex; flex-direction: column; gap: 10px; }
-    .feedback-item { padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; }
-    .feedback-item.approved { border-color: #22c55e; background: #f0fdf4; }
-    .feedback-item.needs-change { border-color: #eab308; background: #fefce8; }
-    .feedback-item.comment { border-color: #3b82f6; background: #eff6ff; }
-    .feedback-reviewer { font-weight: 600; color: #0f3460; }
-    .feedback-type { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; margin-left: 6px; text-transform: uppercase; }
-    .feedback-type.approved { background: #dcfce7; color: #166534; }
-    .feedback-type.needs-change { background: #fef08a; color: #713f12; }
-    .feedback-type.comment { background: #dbeafe; color: #1e40af; }
-    .feedback-timestamp { display: block; color: #94a3b8; font-size: 10px; margin-top: 4px; }
-    .feedback-comment { color: #475569; line-height: 1.5; margin-top: 4px; word-break: break-word; }
-    .btn-container { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-    .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-    .btn-primary { background: #0f3460; color: white; }
-    .btn-primary:hover { background: #0a1f2e; }
-    .btn-secondary { background: #e2e8f0; color: #1e293b; }
-    .btn-secondary:hover { background: #cbd5e1; }
-    .detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-    .detail-modal.show { display: flex; }
-    .detail-content { background: white; border-radius: 10px; padding: 28px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
-    .detail-close { float: right; cursor: pointer; font-size: 24px; color: #94a3b8; }
-    .detail-close:hover { color: #475569; }
-    .detail-item { margin-bottom: 20px; }
-    .detail-item:last-child { margin-bottom: 0; }
-    .detail-label { font-weight: 700; color: #0f3460; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .detail-reviewer { font-size: 14px; font-weight: 600; color: #1e293b; }
-    .detail-feedback-type { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-left: 8px; }
-    .detail-feedback-type.approved { background: #dcfce7; color: #166534; }
-    .detail-feedback-type.needs-change { background: #fef08a; color: #713f12; }
-    .detail-feedback-type.comment { background: #dbeafe; color: #1e40af; }
-    .detail-timestamp { color: #94a3b8; font-size: 11px; display: block; margin-top: 6px; }
-    .detail-comment { color: #475569; line-height: 1.6; margin-top: 8px; padding: 10px; background: #f8fafc; border-left: 2px solid #cbd5e1; font-size: 13px; border-radius: 4px; }
-    .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 6px; color: white; font-size: 13px; font-weight: 600; z-index: 2000; animation: slideIn 0.3s ease-out; }
-    .toast.success { background: #22c55e; }
-    .toast.error { background: #ef4444; }
-    .toast.info { background: #3b82f6; }
-    @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @media (max-width: 768px) { .container { padding: 15px; } .stats-bar { padding: 10px 15px; } .filters { padding: 10px 15px; } .header { padding: 15px 20px; } .header h1 { font-size: 18px; } .qcard { margin-bottom: 15px; } .card-head { padding: 10px 14px; } .card-body { padding: 12px; } .detail-content { padding: 20px; max-width: 95%; } }
-    </style>
-  </head>
-  <body><div class="header">
-    <h1>HPATPro™ QA Review</h1>
-    <div class="sub">Review individual responses & feedback</div>div>
-  </div>div>
-  <div class="stats-bar">
-    <div class="stat">
-        <div class="num" id="stat-total">0</div>div>
-        <div class="label">Total Items</div>div>
-    </div>div>
-    <div class="stat">
-        <div class="num" id="stat-submitted">0</div>div>
-        <div class="label">Submitted</div>div>
-    </div>div>
-    <div class="stat">
-        <div class="num" id="stat-pending">0</div>div>
-        <div class="label">Pending</div>div>
-    </div>div>
-    <div class="stat">
-        <div class="num" id="stat-approved">0</div>div>
-        <div class="label">Approved</div>div>
-    </div>div>
-  </div>div>
-  <div class="filters">
-    <span class="flabel">Filter:</span>span>
-    <button class="fbtn active" data-filter="all">All</button>button>
-    <button class="fbtn" data-filter="S1">Section 1</button>button>
-    <button class="fbtn" data-filter="S2">Section 2</button>button>
-    <button class="fbtn" data-filter="S3">Section 3</button>button>
-    <span class="flabel" style="margin-left: 20px;">Difficulty:</span>span>
-    <button class="fbtn" data-filter="easy">Easy</button>button>
-    <button class="fbtn" data-filter="medium">Medium</button>button>
-    <button class="fbtn" data-filter="hard">Hard</button>button>
-  </div>div>
-  <div class="container" id="container"></div>div>
-  <div class="detail-modal" id="detailModal">
-    <div class="detail-content">
-        <span class="detail-close" onclick="document.getElementById('detailModal').classList.remove('show')">&times;</span>span>
-        <div id="detailBody"></div>div>
-    </div>div>
-  </div>div>
-  <script>
-    const API_CONFIG = {
-        API_BASE: 'https://hefkrytmwdtljhmtlsaacx.supabase.co/rest/v1',
-        ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlZmtyeXRtd2R0bGpobXRsc2FhY3giLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNDUyODQwNiwiZXhwIjoxNzUwMDgwNDA2fQ.rrBsM1LVl7jGDKH7MqEqy6hPILcONXlHMHXFXrTK0aU'
-    };
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPATPro — QA Review</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; line-height: 1.6; }
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.header h1 { font-size: 24px; font-weight: 700; }
+.header .sub { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+.stats-bar { display: flex; gap: 20px; padding: 14px 40px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; align-items: center; }
+.stat { text-align: center; padding: 6px 14px; }
+.stat .num { font-size: 22px; font-weight: 700; color: #0f3460; }
+.stat .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.filters { padding: 12px 40px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.fbtn { padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+.fbtn:hover { border-color: #0f3460; }
+.fbtn.active { background: #0f3460; color: white; border-color: #0f3460; }
+.flabel { font-size: 12px; color: #666; font-weight: 600; margin-right: 4px; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px 40px 80px; }
+.loading { text-align: center; padding: 60px; font-size: 18px; color: #666; }
+.section-divider { margin: 28px 0 14px; padding: 12px 18px; color: white; border-radius: 8px; font-size: 16px; font-weight: 600; }
+.qcard { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border-left: 4px solid #ccc; transition: border-color 0.3s; }
+.qcard.submitted { border-left-color: #22c55e; }
+.card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #fafafa; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 8px; }
+.card-head .code { font-weight: 700; font-size: 14px; color: #0f3460; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge { padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.badge.s1 { background: #ede9fe; color: #7c3aed; }
+.badge.s2 { background: #dbeafe; color: #2563eb; }
+.badge.s3 { background: #d1fae5; color: #059669; }
+.badge.cat { background: #f3e8ff; color: #7c3aed; }
+.badge.visual { background: #fef3c7; color: #92400e; }
+.card-body { padding: 18px; }
+.stimulus { padding: 12px 16px; background: #f8f9fb; border-left: 3px solid #94a3b8; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #334155; line-height: 1.6; }
+.stimulus .stim-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+.stimulus table { border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+.stimulus table th, .stimulus table td { border: 1px solid #cbd5e1; padding: 4px 10px; text-align: left; }
+.stimulus table th { background: #e2e8f0; font-weight: 600; }
+.question { font-size: 15px; font-weight: 500; color: #111; margin-bottom: 14px; }
+.options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.opt { padding: 8px 12px; border-radius: 6px; background: #f9fafb; border: 1px solid #e5e7eb; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+.opt.correct { background: #dcfce7; border-color: #16a34a; }
+.opt-marker { flex-shrink: 0; }
+.explanation { margin-top: 8px; }
+.explanation summary { cursor: pointer; font-size: 12px; color: #2563eb; font-weight: 600; padding: 6px 0; }
+.exp-content { padding: 10px 14px; background: #f0f9ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; color: #1e40af; margin-top: 6px; line-height: 1.5; }
+.feedback-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee; }
+.fb-existing { margin-bottom: 8px; }
+.fb-count { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-right: 4px; }
+.fb-count.approve { background: #dcfce7; color: #16a34a; }
+.fb-count.issue { background: #fef3c7; color: #d97706; }
+.fb-count.edit { background: #dbeafe; color: #2563eb; }
+.fb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.fb-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; }
+.fb-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.fb-btn.approve:hover { border-color: #16a34a; background: #f0fdf4; }
+.fb-btn.issue:hover { border-color: #d97706; background: #fffbeb; }
+.fb-btn.edit:hover { border-color: #2563eb; background: #eff6ff; }
+.fb-btn.selected { color: white; }
+.fb-btn.approve.selected { background: #16a34a; border-color: #16a34a; }
+.fb-btn.issue.selected { background: #d97706; border-color: #d97706; }
+.fb-btn.edit.selected { background: #2563eb; border-color: #2563eb; }
+.fb-form { margin-top: 12px; display: none; }
+.fb-form.visible { display: block; }
+.fb-name { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
+.fb-comment { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; min-height: 70px; resize: vertical; font-family: inherit; }
+.fb-form-actions { display: flex; gap: 8px; margin-top: 8px; }
+.fb-submit { padding: 7px 20px; border-radius: 6px; border: none; background: #0f3460; color: white; cursor: pointer; font-size: 12px; font-weight: 600; }
+.fb-submit:hover { background: #1a4a8a; }
+.fb-cancel { padding: 7px 20px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; }
+.fb-success { padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; color: #16a34a; font-size: 13px; font-weight: 500; text-align: center; margin-top: 10px; }
+.fb-toggle { cursor: pointer; font-size: 12px; color: #2563eb; font-weight: 600; padding: 4px 0; user-select: none; }
+.fb-toggle:hover { text-decoration: underline; }
+.fb-details { display: none; margin-top: 8px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.fb-details.visible { display: block; }
+.fb-detail-item { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+.fb-detail-item:last-child { border-bottom: none; }
+.fb-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.fb-detail-name { font-weight: 600; color: #1a1a2e; }
+.fb-detail-type { padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.fb-detail-type.approve { background: #dcfce7; color: #16a34a; }
+.fb-detail-type.issue { background: #fef3c7; color: #d97706; }
+.fb-detail-type.edit { background: #dbeafe; color: #2563eb; }
+.fb-detail-comment { color: #374151; line-height: 1.5; margin-top: 2px; }
+.fb-detail-date { font-size: 10px; color: #9ca3af; margin-top: 4px; }
+.fb-no-comments { padding: 10px 14px; color: #9ca3af; font-style: italic; font-size: 12px; }
+.refresh-btn { padding: 6px 16px; border-radius: 6px; background: #0f3460; color: white; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+.refresh-btn:hover { background: #1a4a8a; }
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; background: #0f3460; color: white; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+.toast.show { transform: translateY(0); opacity: 1; }
+@media (max-width: 768px) {
+  .header, .stats-bar, .filters, .container { padding-left: 16px; padding-right: 16px; }
+  .card-head { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>HPATPro — QA Review</h1>
+  <div class="sub" id="subtitle">Loading questions...</div>
+</div>
+<div class="stats-bar" id="stats-bar">
+  <div class="stat"><div class="num" id="stat-total">-</div><div class="label">Total</div></div>
+  <div class="stat"><div class="num" id="stat-s1">-</div><div class="label">S1 Logical</div></div>
+  <div class="stat"><div class="num" id="stat-s2">-</div><div class="label">S2 Interpersonal</div></div>
+  <div class="stat"><div class="num" id="stat-s3">-</div><div class="label">S3 Non-Verbal</div></div>
+  <button class="refresh-btn" onclick="loadQuestions()">&#128260; New Batch</button>
+</div>
+<div class="filters">
+  <span class="flabel">Section:</span>
+  <button class="fbtn active" data-filter="section" data-val="all">All</button>
+  <button class="fbtn" data-filter="section" data-val="s1">S1</button>
+  <button class="fbtn" data-filter="section" data-val="s2">S2</button>
+  <button class="fbtn" data-filter="section" data-val="s3">S3</button>
+  <span class="flabel" style="margin-left:12px;">Difficulty:</span>
+  <button class="fbtn" data-filter="diff" data-val="all">All</button>
+  <button class="fbtn" data-filter="diff" data-val="easy">Easy</button>
+  <button class="fbtn" data-filter="diff" data-val="medium">Medium</button>
+  <button class="fbtn" data-filter="diff" data-val="hard">Hard</button>
+</div>
+<div class="container" id="container">
+  <div class="loading">Loading questions from database...</div>
+</div>
+<div class="toast" id="toast"></div>
 
-    const sbSelect = async (table, query) => {
-        const q = new URLSearchParams(query).toString();
-        const res = await fetch(`${API_CONFIG.API_BASE}/${table}?${q}`, {
-              headers: { 'Authorization': `Bearer ${API_CONFIG.ANON_KEY}`, 'Content-Type': 'application/json' }
-        });
-        return res.json();
-    };
+<script>
+var API_BASE = 'https://hefkyrtmwdtljhmsaacx.supabase.co/rest/v1';
+var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlZmt5cnRtd2R0bGpobXNhYWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTE2MTksImV4cCI6MjA4Nzk2NzYxOX0.mQJ8mRUTByQzT4qTWr0RnGZ3qsWBHvnQ-7ghTcUPlIk';
+var API_HEADERS = { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
-    const sbInsert = async (table, data) => {
-        const res = await fetch(`${API_CONFIG.API_BASE}/${table}`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${API_CONFIG.ANON_KEY}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-        });
-        return res.json();
-    };
+function sbSelect(table, params) {
+  var url = API_BASE + '/' + table + '?' + params;
+  return fetch(url, { headers: API_HEADERS }).then(function(r) { return r.json(); });
+}
+function sbInsert(table, data) {
+  return fetch(API_BASE + '/' + table, { method: 'POST', headers: API_HEADERS, body: JSON.stringify(data) }).then(function(r) { return r.json(); });
+}
+var activeFeedback = {};
+var currentFilter = { section: 'all', diff: 'all' };
 
-    let activeFeedback = {};
-    let currentFilter = 'all';
+var sLabels = { logical_reasoning: 'S1 — Logical Reasoning', interpersonal_understanding: 'S2 — Interpersonal Understanding', non_verbal_reasoning: 'S3 — Non-Verbal Reasoning' };
+var sColors = { logical_reasoning: '#7c3aed', interpersonal_understanding: '#2563eb', non_verbal_reasoning: '#059669' };
+var sBadge = { logical_reasoning: 's1', interpersonal_understanding: 's2', non_verbal_reasoning: 's3' };
+var sOrder = { logical_reasoning: 1, interpersonal_understanding: 2, non_verbal_reasoning: 3 };
 
-    const sLabels = { S1: 'Section 1', S2: 'Section 2', S3: 'Section 3' };
-    const sColors = { S1: '#ede9fe', S2: '#dbeafe', S3: '#d1fae5' };
-    const sBadge = { S1: '#7c3aed', S2: '#2563eb', S3: '#059669' };
-    const sOrder = { S1: 1, S2: 2, S3: 3 };
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function diffColor(d) { return d >= 8 ? '#dc2626' : d >= 6 ? '#f59e0b' : '#22c55e'; }
+function diffLabel(d) { return d >= 8 ? 'Hard' : d >= 6 ? 'Medium' : 'Easy'; }
 
-    const getDifficulty = (code) => {
-        const last = code.slice(-1).toUpperCase();
-        return last === 'E' ? 'easy' : last === 'M' ? 'medium' : 'hard';
-    };
+function shuffle(arr) {
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
 
-    const getSection = (code) => code.match(/S\d/)?.[0] || 'S1';
+async function fetchSection(sectionName, limit) {
+  var cols = 'id,code,section,category,subcategory,question_text,options,correct_answer,explanation,difficulty_grade,task_type,has_visual_asset,stimulus_type,stimulus';
+  var data = await sbSelect('questions', 'select=' + cols + '&is_active=eq.true&section=eq.' + sectionName + '&limit=500');
+  return shuffle(data || []).slice(0, limit);
+}
 
-    const loadFeedback = async () => {
-        document.getElementById('container').innerHTML = '<div class="loading">Loading feedback...</div>';
-        try {
-              const data = await sbSelect('feedback', { select: '*' });
-              if (!data.length) {
-                      document.getElementById('container').innerHTML = '<div class="loading">No feedback data found</div>';
-                      return;
-              }
-              renderFeedback(data);
-              updateStats(data);
-        } catch (e) {
-              console.error(e);
-              document.getElementById('container').innerHTML = '<div class="loading">Error loading feedback</div>';
-        }
-    };
+async function loadQuestions() {
+  document.getElementById('container').innerHTML = '<div class="loading">Loading questions from database...</div>';
 
-    const renderFeedback = (data) => {
-        const grouped = {};
-        data.forEach(fb => {
-              const qid = fb.question_id;
-              if (!grouped[qid]) grouped[qid] = { question: fb.question_text, section: fb.section, difficulty: fb.difficulty, feedbacks: [] };
-              grouped[qid].feedbacks.push(fb);
-        });
+  var fbData = await sbSelect('qa_feedback', 'select=question_id,feedback_type,reviewer_name,comment,created_at&status=eq.pending&order=created_at.desc') || [];
+  var fbMap = {};
+  var fbDetails = {};
+  fbData.forEach(function(f) {
+    if (!fbMap[f.question_id]) fbMap[f.question_id] = { a: 0, i: 0, e: 0 };
+    if (f.feedback_type === 'approve') fbMap[f.question_id].a++;
+    if (f.feedback_type === 'flag_issue') fbMap[f.question_id].i++;
+    if (f.feedback_type === 'suggest_edit') fbMap[f.question_id].e++;
+    if (!fbDetails[f.question_id]) fbDetails[f.question_id] = [];
+    fbDetails[f.question_id].push({ type: f.feedback_type, name: f.reviewer_name, comment: f.comment, date: f.created_at });
+  });
 
-        const container = document.getElementById('container');
-        container.innerHTML = '';
+  var results = await Promise.all([
+    fetchSection('logical_reasoning', 20),
+    fetchSection('interpersonal_understanding', 20),
+    fetchSection('non_verbal_reasoning', 10)
+  ]);
 
-        Object.entries(grouped).forEach(([qid, item]) => {
-              if (currentFilter !== 'all' && item.section !== currentFilter && item.difficulty !== currentFilter) return;
+  var questions = results[0].concat(results[1]).concat(results[2]);
+  questions.sort(function(a, b) {
+    return (sOrder[a.section] || 9) - (sOrder[b.section] || 9) || a.code.localeCompare(b.code);
+  });
 
-              const section = item.section || 'S1';
-              const difficulty = item.difficulty || getDifficulty(qid);
+  var counts = {};
+  questions.forEach(function(q) { counts[q.section] = (counts[q.section] || 0) + 1; });
 
-              const card = document.createElement('div');
-              card.className = 'qcard ' + (item.feedbacks.some(f => f.feedback_type === 'approved') ? 'submitted' : '');
-              card.innerHTML = `
-                    <div class="card-head">
-                            <div class="code">${qid}</div>
-                                    <div class="badges">
-                                              <span class="badge s${section.match(/\d/)[0]}">${section}</span>
-                                                        <span class="badge visual">${difficulty}</span>
-                                                                </div>
-                                                                      </div>
-                                                                            <div class="card-body">
-                                                                                    <div style="font-weight: 600; margin-bottom: 10px; color: #1e293b;">${item.question}</div>
-                                                                                            <div class="feedback-section">
-                                                                                                      <div class="feedback-header">Feedback from Reviewers</div>
-                                                                                                                <div class="feedback-list">
-                                                                                                                            ${item.feedbacks.map(fb => `
-                                                                                                                                          <div class="feedback-item ${fb.feedback_type}">
-                                                                                                                                                          <div class="feedback-reviewer">${fb.reviewer_name}
-                                                                                                                                                                            <span class="feedback-type ${fb.feedback_type}">${fb.feedback_type}</span>
-                                                                                                                                                                                            </div>
-                                                                                                                                                                                                            <div class="feedback-comment">${fb.feedback_comment || 'No comment'}</div>
-                                                                                                                                                                                                                            <div class="feedback-timestamp">${new Date(fb.created_at).toLocaleString()}</div>
-                                                                                                                                                                                                                                          </div>
-                                                                                                                                                                                                                                                      `).join('')}
-                                                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                                                                              </div>
-                                                                                                                                                                                                                                                                                  `;
-              container.appendChild(card);
-        });
-    };
+  var today = new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('subtitle').textContent = 'Live question bank review \u2022 ' + today + ' \u2022 ' + questions.length + ' questions \u2022 ' + fbData.length + ' feedback items';
+  document.getElementById('stat-total').textContent = questions.length;
+  document.getElementById('stat-s1').textContent = counts.logical_reasoning || 0;
+  document.getElementById('stat-s2').textContent = counts.interpersonal_understanding || 0;
+  document.getElementById('stat-s3').textContent = counts.non_verbal_reasoning || 0;
 
-    const updateStats = (data) => {
-        const stats = { total: new Set(data.map(d => d.question_id)).size, submitted: 0, pending: 0, approved: 0 };
-        data.forEach(fb => {
-              if (fb.feedback_type === 'approved') stats.approved++;
-              else if (fb.feedback_type === 'needs-change') stats.pending++;
-        });
-        document.getElementById('stat-total').textContent = stats.total;
-        document.getElementById('stat-submitted').textContent = data.length;
-        document.getElementById('stat-pending').textContent = stats.pending;
-        document.getElementById('stat-approved').textContent = stats.approved;
-    };
+  var html = '';
+  var currentSection = '';
+  var qNum = 0;
 
-    document.querySelectorAll('.fbtn').forEach(btn => {
-        btn.addEventListener('click', function() {
-              document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
-              this.classList.add('active');
-              currentFilter = this.dataset.filter;
-              loadFeedback();
-        });
+  questions.forEach(function(q) {
+    if (q.section !== currentSection) {
+      currentSection = q.section;
+      html += '<div class="section-divider" style="background:' + (sColors[q.section] || '#666') + ';">' + esc(sLabels[q.section] || q.section) + ' (' + (counts[q.section] || 0) + ' questions)</div>';
+    }
+    qNum++;
+    var opts = q.options || {};
+    var optKeys = Object.keys(opts).sort();
+    var optsHtml = optKeys.map(function(k) {
+      var isCorrect = k === q.correct_answer;
+      return '<div class="opt ' + (isCorrect ? 'correct' : '') + '"><span class="opt-marker">' + (isCorrect ? '\u2705' : '\u25cb') + '</span><strong>' + k + '.</strong> ' + esc(opts[k]) + '</div>';
+    }).join('');
+
+    var d = q.difficulty_grade || 5;
+    var visual = q.has_visual_asset ? '<span class="badge visual">\ud83d\udcca Visual</span>' : '';
+    var fb = fbMap[q.id] || { a: 0, i: 0, e: 0 };
+    var fbBadges = '';
+    if (fb.a > 0) fbBadges += '<span class="fb-count approve">' + fb.a + ' approved</span> ';
+    if (fb.i > 0) fbBadges += '<span class="fb-count issue">' + fb.i + ' issues</span> ';
+    if (fb.e > 0) fbBadges += '<span class="fb-count edit">' + fb.e + ' suggestions</span> ';
+
+    html += '<div class="qcard" data-section="' + (sBadge[q.section] || '') + '" data-diff="' + diffLabel(d).toLowerCase() + '" id="q-' + q.id + '">';
+    html += '<div class="card-head"><span class="code">#' + qNum + ' \u2014 ' + esc(q.code) + '</span>';
+    html += '<div class="badges"><span class="badge ' + (sBadge[q.section] || '') + '">' + (sBadge[q.section] || '').toUpperCase() + '</span>';
+    html += '<span class="badge cat">' + esc(q.category || '') + '</span>';
+    html += '<span class="badge" style="background:' + diffColor(d) + '20;color:' + diffColor(d) + ';">' + diffLabel(d) + ' (' + d + ')</span>';
+    html += visual + '</div></div>';
+    var stimHtml = '';
+    if (q.stimulus && q.stimulus.text) {
+      var stimLabel = (q.stimulus_type || 'context').replace(/_/g, ' ');
+      var stimText = q.stimulus.text;
+      if (stimText.indexOf('<') !== -1 && (stimText.indexOf('<table') !== -1 || stimText.indexOf('<p>') !== -1 || stimText.indexOf('<br') !== -1)) {
+        stimHtml = '<div class="stimulus"><div class="stim-label">' + esc(stimLabel) + '</div>' + stimText + '</div>';
+      } else {
+        stimHtml = '<div class="stimulus"><div class="stim-label">' + esc(stimLabel) + '</div>' + esc(stimText) + '</div>';
+      }
+    } else if (q.stimulus && q.stimulus.pattern_rule && q.stimulus_type === 'svg_pattern') {
+      stimHtml = '<div class="stimulus"><div class="stim-label">pattern rule</div>' + esc(q.stimulus.pattern_rule) + '</div>';
+    }
+    html += '<div class="card-body">' + stimHtml + '<div class="question">' + esc(q.question_text) + '</div>';
+    html += '<div class="options">' + optsHtml + '</div>';
+    html += '<details class="explanation"><summary>Show Explanation</summary><div class="exp-content">' + esc(q.explanation || 'No explanation available.') + '</div></details>';
+    var detailItems = fbDetails[q.id] || [];
+    var detailHtml = '';
+    if (detailItems.length > 0) {
+      var typeLabel = { approve: 'approve', flag_issue: 'issue', suggest_edit: 'edit' };
+      var typeText = { approve: 'Approved', flag_issue: 'Flagged Issue', suggest_edit: 'Suggested Edit' };
+      detailHtml += '<div class="fb-toggle" onclick="toggleDetails(\'' + q.id + '\')">' + detailItems.length + ' feedback comment' + (detailItems.length > 1 ? 's' : '') + ' \u2014 click to expand</div>';
+      detailHtml += '<div class="fb-details" id="fbd-' + q.id + '">';
+      detailItems.forEach(function(item) {
+        var cls = typeLabel[item.type] || '';
+        var label = typeText[item.type] || item.type;
+        var dateStr = '';
+        if (item.date) { try { dateStr = new Date(item.date).toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch(e) {} }
+        detailHtml += '<div class="fb-detail-item">';
+        detailHtml += '<div class="fb-detail-header"><span class="fb-detail-name">' + esc(item.name || 'Anonymous') + '</span><span class="fb-detail-type ' + cls + '">' + label + '</span></div>';
+        if (item.comment) detailHtml += '<div class="fb-detail-comment">' + esc(item.comment) + '</div>';
+        if (dateStr) detailHtml += '<div class="fb-detail-date">' + dateStr + '</div>';
+        detailHtml += '</div>';
+      });
+      detailHtml += '</div>';
+    }
+    html += '<div class="feedback-section"><div class="fb-existing">' + fbBadges + detailHtml + '</div>';
+    html += '<div class="fb-actions">';
+    html += '<button class="fb-btn approve" onclick="openFeedback(\'' + q.id + '\',\'' + esc(q.code) + '\',\'approve\',this)">\u2705 Approve</button>';
+    html += '<button class="fb-btn issue" onclick="openFeedback(\'' + q.id + '\',\'' + esc(q.code) + '\',\'flag_issue\',this)">\u26a0\ufe0f Flag Issue</button>';
+    html += '<button class="fb-btn edit" onclick="openFeedback(\'' + q.id + '\',\'' + esc(q.code) + '\',\'suggest_edit\',this)">\u270f\ufe0f Suggest Edit</button>';
+    html += '</div>';
+    html += '<div class="fb-form" id="fb-' + q.id + '">';
+    html += '<input type="text" class="fb-name" placeholder="Your name" id="name-' + q.id + '">';
+    html += '<textarea class="fb-comment" placeholder="Your comment or suggestion..." id="comment-' + q.id + '"></textarea>';
+    html += '<div class="fb-form-actions"><button class="fb-submit" id="submit-' + q.id + '" onclick="submitFeedback(\'' + q.id + '\')">Submit</button>';
+    html += '<button class="fb-cancel" onclick="closeFeedback(\'' + q.id + '\')">Cancel</button></div>';
+    html += '</div></div></div></div>';
+  });
+
+  document.getElementById('container').innerHTML = html;
+}
+
+function openFeedback(qId, qCode, type, btn) {
+  var form = document.getElementById('fb-' + qId);
+  form.classList.add('visible');
+  activeFeedback[qId] = { type: type, code: qCode };
+  var btns = btn.parentElement.querySelectorAll('.fb-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('selected');
+  btn.classList.add('selected');
+  var comment = document.getElementById('comment-' + qId);
+  comment.placeholder = type === 'approve' ? 'Optional comment...' : 'Describe the issue or your suggestion...';
+  try { var saved = localStorage.getItem('qa_reviewer_name'); if (saved) document.getElementById('name-' + qId).value = saved; } catch(e) {}
+}
+
+function closeFeedback(qId) {
+  document.getElementById('fb-' + qId).classList.remove('visible');
+  delete activeFeedback[qId];
+  var card = document.getElementById('q-' + qId);
+  var btns = card.querySelectorAll('.fb-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('selected');
+}
+
+async function submitFeedback(qId) {
+  var info = activeFeedback[qId];
+  if (!info) return;
+  var name = document.getElementById('name-' + qId).value.trim();
+  var comment = document.getElementById('comment-' + qId).value.trim();
+  if (!name) { showToast('Please enter your name'); return; }
+  if (info.type !== 'approve' && !comment) { showToast('Please add a comment'); return; }
+  try { localStorage.setItem('qa_reviewer_name', name); } catch(e) {}
+  var submitBtn = document.getElementById('submit-' + qId);
+  submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+  try {
+    var resp = await sbInsert('qa_feedback', {
+      question_id: qId,
+      question_code: info.code,
+      reviewer_name: name,
+      feedback_type: info.type,
+      comment: comment
     });
+    if (resp.code) throw new Error(resp.message || resp.code);
+    var form = document.getElementById('fb-' + qId);
+    form.innerHTML = '<div class="fb-success">\u2705 Feedback submitted by ' + esc(name) + '! Thank you.</div>';
+    document.getElementById('q-' + qId).classList.add('submitted');
+    var detailsEl = document.getElementById('fbd-' + qId);
+    var typeLabel = { approve: 'approve', flag_issue: 'issue', suggest_edit: 'edit' };
+    var typeText = { approve: 'Approved', flag_issue: 'Flagged Issue', suggest_edit: 'Suggested Edit' };
+    var cls = typeLabel[info.type] || '';
+    var label = typeText[info.type] || info.type;
+    var now = new Date().toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    var newItem = '<div class="fb-detail-item" style="background:#f0fdf4;">';
+    newItem += '<div class="fb-detail-header"><span class="fb-detail-name">' + esc(name) + ' (just now)</span><span class="fb-detail-type ' + cls + '">' + label + '</span></div>';
+    if (comment) newItem += '<div class="fb-detail-comment">' + esc(comment) + '</div>';
+    newItem += '<div class="fb-detail-date">' + now + '</div></div>';
+    if (detailsEl) {
+      detailsEl.insertAdjacentHTML('afterbegin', newItem);
+      detailsEl.classList.add('visible');
+    } else {
+      var existing = document.querySelector('#q-' + qId + ' .fb-existing');
+      if (existing) {
+        var toggle = document.createElement('div');
+        toggle.className = 'fb-toggle';
+        toggle.setAttribute('onclick', "toggleDetails('" + qId + "')");
+        toggle.textContent = '1 feedback comment \u2014 click to collapse';
+        var details = document.createElement('div');
+        details.className = 'fb-details visible';
+        details.id = 'fbd-' + qId;
+        details.innerHTML = newItem;
+        existing.appendChild(toggle);
+        existing.appendChild(details);
+      }
+    }
+    showToast('Feedback saved for ' + info.code);
+  } catch(e) {
+    showToast('Error: ' + (e.message || 'Unknown error'));
+    submitBtn.textContent = 'Submit';
+    submitBtn.disabled = false;
+  }
+}
 
-    loadFeedback();
-  </script>
-  </body>
-</html>html>
-  </script></h1></body>
-  </style></title>
-  </head>
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function toggleDetails(qId) {
+  var el = document.getElementById('fbd-' + qId);
+  if (el) {
+    el.classList.toggle('visible');
+    var toggle = el.previousElementSibling;
+    if (toggle && toggle.classList.contains('fb-toggle')) {
+      var count = el.querySelectorAll('.fb-detail-item').length;
+      var label = count + ' feedback comment' + (count > 1 ? 's' : '');
+      toggle.textContent = el.classList.contains('visible') ? label + ' \u2014 click to collapse' : label + ' \u2014 click to expand';
+    }
+  }
+}
+
+// Filter buttons
+document.querySelectorAll('.fbtn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var filterType = btn.dataset.filter;
+    var val = btn.dataset.val;
+    currentFilter[filterType] = val;
+    var siblings = document.querySelectorAll('.fbtn[data-filter="' + filterType + '"]');
+    siblings.forEach(function(s) { s.classList.remove('active'); });
+    btn.classList.add('active');
+    applyFilters();
+  });
+});
+
+function applyFilters() {
+  var cards = document.querySelectorAll('.qcard');
+  cards.forEach(function(card) {
+    var secMatch = currentFilter.section === 'all' || card.dataset.section === currentFilter.section;
+    var diffMatch = currentFilter.diff === 'all' || card.dataset.diff === currentFilter.diff;
+    card.style.display = (secMatch && diffMatch) ? '' : 'none';
+  });
+  document.querySelectorAll('.section-divider').forEach(function(div) {
+    div.style.display = currentFilter.section === 'all' ? '' : 'none';
+  });
+}
+
+// Load on page ready
+loadQuestions();
+</script>
+</body>
+</html>
