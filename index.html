@@ -3,412 +3,484 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HPATPro — QA Review</title>
+<title>HPATPro â QA Review (All Questions)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.3/umd/supabase.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; line-height: 1.6; }
-.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-.header h1 { font-size: 24px; font-weight: 700; }
-.header .sub { font-size: 13px; opacity: 0.7; margin-top: 4px; }
-.stats-bar { display: flex; gap: 20px; padding: 14px 40px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; align-items: center; }
-.stat { text-align: center; padding: 6px 14px; }
-.stat .num { font-size: 22px; font-weight: 700; color: #0f3460; }
-.stat .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
-.filters { padding: 12px 40px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.fbtn { padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; transition: all 0.2s; }
-.fbtn:hover { border-color: #0f3460; }
-.fbtn.active { background: #0f3460; color: white; border-color: #0f3460; }
-.flabel { font-size: 12px; color: #666; font-weight: 600; margin-right: 4px; }
-.container { max-width: 1000px; margin: 0 auto; padding: 20px 40px 80px; }
-.loading { text-align: center; padding: 60px; font-size: 18px; color: #666; }
-.section-divider { margin: 28px 0 14px; padding: 12px 18px; color: white; border-radius: 8px; font-size: 16px; font-weight: 600; }
-.qcard { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border-left: 4px solid #ccc; transition: border-color 0.3s; }
-.qcard.submitted { border-left-color: #22c55e; }
-.card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #fafafa; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 8px; }
-.card-head .code { font-weight: 700; font-size: 14px; color: #0f3460; }
-.badges { display: flex; gap: 6px; flex-wrap: wrap; }
-.badge { padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-.badge.s1 { background: #ede9fe; color: #7c3aed; }
-.badge.s2 { background: #dbeafe; color: #2563eb; }
-.badge.s3 { background: #d1fae5; color: #059669; }
-.badge.cat { background: #f3e8ff; color: #7c3aed; }
-.badge.visual { background: #fef3c7; color: #92400e; }
-.card-body { padding: 18px; }
-.stimulus { padding: 12px 16px; background: #f8f9fb; border-left: 3px solid #94a3b8; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #334155; line-height: 1.6; }
-.stimulus .stim-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
-.stimulus table { border-collapse: collapse; margin-top: 8px; font-size: 12px; }
-.stimulus table th, .stimulus table td { border: 1px solid #cbd5e1; padding: 4px 10px; text-align: left; }
-.stimulus table th { background: #e2e8f0; font-weight: 600; }
-.question { font-size: 15px; font-weight: 500; color: #111; margin-bottom: 14px; }
-.options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.opt { padding: 8px 12px; border-radius: 6px; background: #f9fafb; border: 1px solid #e5e7eb; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
-.opt.correct { background: #dcfce7; border-color: #16a34a; }
-.opt-marker { flex-shrink: 0; }
-.explanation { margin-top: 8px; }
-.explanation summary { cursor: pointer; font-size: 12px; color: #2563eb; font-weight: 600; padding: 6px 0; }
-.exp-content { padding: 10px 14px; background: #f0f9ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; color: #1e40af; margin-top: 6px; line-height: 1.5; }
-.feedback-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee; }
-.fb-existing { margin-bottom: 8px; }
-.fb-count { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-right: 4px; }
-.fb-count.approve { background: #dcfce7; color: #16a34a; }
-.fb-count.issue { background: #fef3c7; color: #d97706; }
-.fb-count.edit { background: #dbeafe; color: #2563eb; }
-.fb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.fb-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; }
-.fb-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.fb-btn.approve:hover { border-color: #16a34a; background: #f0fdf4; }
-.fb-btn.issue:hover { border-color: #d97706; background: #fffbeb; }
-.fb-btn.edit:hover { border-color: #2563eb; background: #eff6ff; }
-.fb-btn.selected { color: white; }
-.fb-btn.approve.selected { background: #16a34a; border-color: #16a34a; }
-.fb-btn.issue.selected { background: #d97706; border-color: #d97706; }
-.fb-btn.edit.selected { background: #2563eb; border-color: #2563eb; }
-.fb-form { margin-top: 12px; display: none; }
-.fb-form.visible { display: block; }
-.fb-name { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
-.fb-comment { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; min-height: 70px; resize: vertical; font-family: inherit; }
-.fb-form-actions { display: flex; gap: 8px; margin-top: 8px; }
-.fb-submit { padding: 7px 20px; border-radius: 6px; border: none; background: #0f3460; color: white; cursor: pointer; font-size: 12px; font-weight: 600; }
-.fb-submit:hover { background: #1a4a8a; }
-.fb-cancel { padding: 7px 20px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; }
-.fb-success { padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; color: #16a34a; font-size: 13px; font-weight: 500; text-align: center; margin-top: 10px; }
-.fb-toggle { cursor: pointer; font-size: 12px; color: #2563eb; font-weight: 600; padding: 4px 0; user-select: none; }
-.fb-toggle:hover { text-decoration: underline; }
-.fb-details { display: none; margin-top: 8px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-.fb-details.visible { display: block; }
-.fb-detail-item { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
-.fb-detail-item:last-child { border-bottom: none; }
-.fb-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.fb-detail-name { font-weight: 600; color: #1a1a2e; }
-.fb-detail-type { padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
-.fb-detail-type.approve { background: #dcfce7; color: #16a34a; }
-.fb-detail-type.issue { background: #fef3c7; color: #d97706; }
-.fb-detail-type.edit { background: #dbeafe; color: #2563eb; }
-.fb-detail-comment { color: #374151; line-height: 1.5; margin-top: 2px; }
-.fb-detail-date { font-size: 10px; color: #9ca3af; margin-top: 4px; }
-.fb-no-comments { padding: 10px 14px; color: #9ca3af; font-style: italic; font-size: 12px; }
-.refresh-btn { padding: 6px 16px; border-radius: 6px; background: #0f3460; color: white; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
-.refresh-btn:hover { background: #1a4a8a; }
-.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; background: #0f3460; color: white; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
-.toast.show { transform: translateY(0); opacity: 1; }
-@media (max-width: 768px) {
-  .header, .stats-bar, .filters, .container { padding-left: 16px; padding-right: 16px; }
-  .card-head { flex-direction: column; align-items: flex-start; }
-}
+  :root {
+    --navy: #1a365d; --blue: #3182ce; --light-blue: #ebf8ff;
+    --green: #38a169; --red: #e53e3e; --orange: #dd6b20;
+    --gray-50: #f7fafc; --gray-100: #edf2f7; --gray-200: #e2e8f0;
+    --gray-500: #718096; --gray-700: #4a5568; --gray-900: #1a202c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-50); color: var(--gray-900); }
+
+  /* Header */
+  .header { background: var(--navy); color: white; padding: 20px 30px; position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 22px; margin-bottom: 4px; }
+  .header .subtitle { opacity: 0.85; font-size: 14px; }
+
+  /* Stats bar */
+  .stats { display: flex; gap: 20px; padding: 16px 30px; background: white; border-bottom: 1px solid var(--gray-200); flex-wrap: wrap; align-items: center; }
+  .stat { text-align: center; min-width: 80px; }
+  .stat .num { font-size: 24px; font-weight: 700; color: var(--navy); }
+  .stat .label { font-size: 11px; text-transform: uppercase; color: var(--gray-500); letter-spacing: 0.5px; }
+
+  /* Filters */
+  .filters { display: flex; gap: 10px; padding: 12px 30px; background: white; border-bottom: 1px solid var(--gray-200); flex-wrap: wrap; align-items: center; }
+  .filter-group { display: flex; align-items: center; gap: 6px; }
+  .filter-group label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+  .filter-btn { padding: 5px 14px; border: 1px solid var(--gray-200); border-radius: 16px; background: white; cursor: pointer; font-size: 13px; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .filter-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .search-box { padding: 6px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 13px; width: 200px; }
+  .reviewer-input { padding: 6px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 13px; width: 160px; }
+
+  /* Pagination */
+  .pagination { display: flex; gap: 6px; padding: 12px 30px; background: white; border-bottom: 1px solid var(--gray-200); align-items: center; justify-content: center; flex-wrap: wrap; }
+  .page-btn { padding: 5px 12px; border: 1px solid var(--gray-200); border-radius: 6px; background: white; cursor: pointer; font-size: 13px; }
+  .page-btn:hover { border-color: var(--blue); }
+  .page-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .page-btn:disabled { opacity: 0.4; cursor: default; }
+  .page-info { font-size: 13px; color: var(--gray-500); margin: 0 8px; }
+
+  /* Content */
+  .content { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  /* Section header */
+  .section-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 20px; border-radius: 8px; margin: 20px 0 12px; font-size: 16px; font-weight: 600; }
+  .section-header.s1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .section-header.s2 { background: linear-gradient(135deg, #38a169, #2f855a); }
+  .section-header.s3 { background: linear-gradient(135deg, #dd6b20, #c05621); }
+
+  /* Question card */
+  .q-card { background: white; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .q-card.has-feedback { border-left: 4px solid var(--orange); }
+  .q-card-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--gray-100); }
+  .q-code { font-weight: 700; font-size: 14px; }
+  .q-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .tag-section { background: var(--light-blue); color: var(--blue); }
+  .tag-category { background: #faf5ff; color: #805ad5; }
+  .tag-diff { background: #fff5f5; color: var(--red); }
+  .tag-diff.easy { background: #f0fff4; color: var(--green); }
+  .tag-diff.medium { background: #fffff0; color: var(--orange); }
+
+  /* Stimulus */
+  .stimulus { background: var(--gray-50); border-left: 3px solid var(--blue); padding: 12px 16px; margin: 12px 16px; border-radius: 0 6px 6px 0; font-size: 13px; }
+  .stimulus .stim-label { font-size: 11px; text-transform: uppercase; color: var(--gray-500); font-weight: 600; margin-bottom: 6px; }
+  .stimulus table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+  .stimulus th, .stimulus td { border: 1px solid var(--gray-200); padding: 6px 10px; text-align: left; }
+  .stimulus th { background: var(--gray-100); font-weight: 600; }
+
+  /* Question body */
+  .q-body { padding: 12px 16px; }
+  .q-text { font-size: 15px; margin-bottom: 12px; line-height: 1.5; }
+  .options { list-style: none; }
+  .option { padding: 8px 12px; margin: 4px 0; border-radius: 6px; font-size: 14px; display: flex; gap: 8px; }
+  .option .letter { font-weight: 700; min-width: 24px; }
+  .option.correct { background: #f0fff4; border: 1px solid #c6f6d5; }
+
+  /* Explanation */
+  .explanation { background: var(--gray-50); padding: 12px 16px; margin: 0 16px 12px; border-radius: 6px; font-size: 13px; color: var(--gray-700); line-height: 1.6; }
+  .explanation summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+
+  /* Feedback actions */
+  .q-actions { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--gray-100); flex-wrap: wrap; }
+  .action-btn { padding: 6px 14px; border: 1px solid var(--gray-200); border-radius: 6px; cursor: pointer; font-size: 13px; background: white; transition: all 0.15s; }
+  .action-btn:hover { border-color: var(--blue); }
+  .action-btn.approve { color: var(--green); }
+  .action-btn.approve:hover, .action-btn.approve.selected { background: var(--green); color: white; }
+  .action-btn.flag { color: var(--red); }
+  .action-btn.flag:hover, .action-btn.flag.selected { background: var(--red); color: white; }
+  .action-btn.edit { color: var(--orange); }
+  .action-btn.edit:hover, .action-btn.edit.selected { background: var(--orange); color: white; }
+
+  /* Feedback form */
+  .feedback-form { padding: 12px 16px; border-top: 1px solid var(--gray-100); display: none; }
+  .feedback-form.visible { display: block; }
+  .feedback-form textarea { width: 100%; padding: 8px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 13px; min-height: 60px; resize: vertical; font-family: inherit; }
+  .feedback-form .form-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .submit-btn { padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; background: var(--blue); color: white; }
+  .submit-btn:hover { opacity: 0.9; }
+  .cancel-btn { padding: 6px 16px; border: 1px solid var(--gray-200); border-radius: 6px; cursor: pointer; font-size: 13px; background: white; }
+
+  /* Existing feedback badge */
+  .existing-feedback { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 6px; padding: 8px 12px; margin: 8px 16px; font-size: 12px; }
+  .existing-feedback .fb-type { font-weight: 600; text-transform: capitalize; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+
+  /* Loading */
+  .loading { text-align: center; padding: 60px; color: var(--gray-500); }
+  .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid var(--gray-200); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Progress bar */
+  .progress-bar { height: 4px; background: var(--gray-200); margin: 0 30px; border-radius: 2px; }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s; }
+
+  /* SVG display for S3 */
+  .visual-asset { margin: 12px 16px; text-align: center; }
+  .visual-asset svg { max-width: 100%; height: auto; }
 </style>
 </head>
 <body>
+
 <div class="header">
-  <h1>HPATPro — QA Review</h1>
-  <div class="sub" id="subtitle">Loading questions...</div>
+  <h1>HPATPro â QA Review</h1>
+  <div class="subtitle">Full question bank review &bull; 28 March 2026 &bull; <span id="totalCount">Loading...</span> questions &bull; <span id="feedbackCount">0</span> feedback items</div>
 </div>
-<div class="stats-bar" id="stats-bar">
-  <div class="stat"><div class="num" id="stat-total">-</div><div class="label">Total</div></div>
-  <div class="stat"><div class="num" id="stat-s1">-</div><div class="label">S1 Logical</div></div>
-  <div class="stat"><div class="num" id="stat-s2">-</div><div class="label">S2 Interpersonal</div></div>
-  <div class="stat"><div class="num" id="stat-s3">-</div><div class="label">S3 Non-Verbal</div></div>
-  <button class="refresh-btn" onclick="loadQuestions()">&#128260; New Batch</button>
+
+<div class="stats" id="statsBar">
+  <div class="stat"><div class="num" id="statTotal">â</div><div class="label">Total</div></div>
+  <div class="stat"><div class="num" id="statS1">â</div><div class="label">S1 Logical</div></div>
+  <div class="stat"><div class="num" id="statS2">â</div><div class="label">S2 Interpersonal</div></div>
+  <div class="stat"><div class="num" id="statS3">â</div><div class="label">S3 Non-Verbal</div></div>
+  <div class="stat"><div class="num" id="statReviewed" style="color:var(--green)">0</div><div class="label">Reviewed</div></div>
+  <div class="stat"><div class="num" id="statFlagged" style="color:var(--red)">0</div><div class="label">Flagged</div></div>
 </div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
 <div class="filters">
-  <span class="flabel">Section:</span>
-  <button class="fbtn active" data-filter="section" data-val="all">All</button>
-  <button class="fbtn" data-filter="section" data-val="s1">S1</button>
-  <button class="fbtn" data-filter="section" data-val="s2">S2</button>
-  <button class="fbtn" data-filter="section" data-val="s3">S3</button>
-  <span class="flabel" style="margin-left:12px;">Difficulty:</span>
-  <button class="fbtn" data-filter="diff" data-val="all">All</button>
-  <button class="fbtn" data-filter="diff" data-val="easy">Easy</button>
-  <button class="fbtn" data-filter="diff" data-val="medium">Medium</button>
-  <button class="fbtn" data-filter="diff" data-val="hard">Hard</button>
+  <div class="filter-group">
+    <label>Section:</label>
+    <button class="filter-btn active" data-filter="section" data-value="all">All</button>
+    <button class="filter-btn" data-filter="section" data-value="logical_reasoning">S1</button>
+    <button class="filter-btn" data-filter="section" data-value="interpersonal_understanding">S2</button>
+    <button class="filter-btn" data-filter="section" data-value="non_verbal_reasoning">S3</button>
+  </div>
+  <div class="filter-group">
+    <label>Difficulty:</label>
+    <button class="filter-btn active" data-filter="diff" data-value="all">All</button>
+    <button class="filter-btn" data-filter="diff" data-value="easy">Easy</button>
+    <button class="filter-btn" data-filter="diff" data-value="medium">Medium</button>
+    <button class="filter-btn" data-filter="diff" data-value="hard">Hard</button>
+  </div>
+  <div class="filter-group">
+    <label>Status:</label>
+    <button class="filter-btn active" data-filter="status" data-value="all">All</button>
+    <button class="filter-btn" data-filter="status" data-value="unreviewed">Unreviewed</button>
+    <button class="filter-btn" data-filter="status" data-value="flagged">Flagged</button>
+  </div>
+  <div class="filter-group">
+    <input type="text" class="search-box" id="searchBox" placeholder="Search code or text...">
+  </div>
+  <div class="filter-group">
+    <label>Reviewer:</label>
+    <input type="text" class="reviewer-input" id="reviewerName" placeholder="Your name" value="">
+  </div>
 </div>
-<div class="container" id="container">
-  <div class="loading">Loading questions from database...</div>
+
+<div class="pagination" id="pagination"></div>
+
+<div class="content" id="questionsContainer">
+  <div class="loading"><div class="spinner"></div><p style="margin-top:12px">Loading all questions...</p></div>
 </div>
+
+<div class="pagination" id="paginationBottom"></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-var API_BASE = 'https://hefkyrtmwdtljhmsaacx.supabase.co/rest/v1';
-var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlZmt5cnRtd2R0bGpobXNhYWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTE2MTksImV4cCI6MjA4Nzk2NzYxOX0.mQJ8mRUTByQzT4qTWr0RnGZ3qsWBHvnQ-7ghTcUPlIk';
-var API_HEADERS = { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+(function() {
+  // Supabase config
+  var SUPABASE_URL = 'https://hefkyrtmwdtljhmsaacx.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlZmt5cnRtd2R0bGpobXNhYWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTE2MTksImV4cCI6MjA4Nzk2NzYxOX0.mQJ8mRUTByQzT4qTWr0RnGZ3qsWBHvnQ-7ghTcUPlIk';
 
-function sbSelect(table, params) {
-  var url = API_BASE + '/' + table + '?' + params;
-  return fetch(url, { headers: API_HEADERS }).then(function(r) { return r.json(); });
-}
-function sbInsert(table, data) {
-  return fetch(API_BASE + '/' + table, { method: 'POST', headers: API_HEADERS, body: JSON.stringify(data) }).then(function(r) { return r.json(); });
-}
-var activeFeedback = {};
-var currentFilter = { section: 'all', diff: 'all' };
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-var sLabels = { logical_reasoning: 'S1 — Logical Reasoning', interpersonal_understanding: 'S2 — Interpersonal Understanding', non_verbal_reasoning: 'S3 — Non-Verbal Reasoning' };
-var sColors = { logical_reasoning: '#7c3aed', interpersonal_understanding: '#2563eb', non_verbal_reasoning: '#059669' };
-var sBadge = { logical_reasoning: 's1', interpersonal_understanding: 's2', non_verbal_reasoning: 's3' };
-var sOrder = { logical_reasoning: 1, interpersonal_understanding: 2, non_verbal_reasoning: 3 };
+  var allQuestions = [];
+  var allFeedback = [];
+  var filteredQuestions = [];
+  var currentPage = 1;
+  var perPage = 25;
+  var filters = { section: 'all', diff: 'all', status: 'all', search: '' };
+  var reviewedSet = new Set();
+  var flaggedSet = new Set();
 
-function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-function diffColor(d) { return d >= 8 ? '#dc2626' : d >= 6 ? '#f59e0b' : '#22c55e'; }
-function diffLabel(d) { return d >= 8 ? 'Hard' : d >= 6 ? 'Medium' : 'Easy'; }
+  // Load saved reviewer name
+  var savedName = '';
+  try { savedName = localStorage.getItem('qa_reviewer') || ''; } catch(e) {}
+  document.getElementById('reviewerName').value = savedName;
 
-function shuffle(arr) {
-  for (var i = arr.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
-  }
-  return arr;
-}
+  // Load all data
+  async function loadAll() {
+    try {
+      // Fetch all questions (Supabase default limit is 1000, we have 447)
+      var qRes = await sb.from('questions').select('id,code,section,category,difficulty,difficulty_grade,stimulus_type,stimulus,question_text,options,correct_answer,explanation,has_visual_asset,visual_asset_svg').order('section').order('code');
 
-async function fetchSection(sectionName, limit) {
-  var cols = 'id,code,section,category,subcategory,question_text,options,correct_answer,explanation,difficulty_grade,task_type,has_visual_asset,stimulus_type,stimulus';
-  var data = await sbSelect('questions', 'select=' + cols + '&is_active=eq.true&section=eq.' + sectionName + '&limit=500');
-  return shuffle(data || []).slice(0, limit);
-}
+      if (qRes.error) throw qRes.error;
+      allQuestions = qRes.data || [];
 
-async function loadQuestions() {
-  document.getElementById('container').innerHTML = '<div class="loading">Loading questions from database...</div>';
+      // Fetch all feedback
+      var fbRes = await sb.from('qa_feedback').select('*').order('created_at', {ascending: false});
+      allFeedback = fbRes.data || [];
 
-  var fbData = await sbSelect('qa_feedback', 'select=question_id,feedback_type,reviewer_name,comment,created_at&status=eq.pending&order=created_at.desc') || [];
-  var fbMap = {};
-  var fbDetails = {};
-  fbData.forEach(function(f) {
-    if (!fbMap[f.question_id]) fbMap[f.question_id] = { a: 0, i: 0, e: 0 };
-    if (f.feedback_type === 'approve') fbMap[f.question_id].a++;
-    if (f.feedback_type === 'flag_issue') fbMap[f.question_id].i++;
-    if (f.feedback_type === 'suggest_edit') fbMap[f.question_id].e++;
-    if (!fbDetails[f.question_id]) fbDetails[f.question_id] = [];
-    fbDetails[f.question_id].push({ type: f.feedback_type, name: f.reviewer_name, comment: f.comment, date: f.created_at });
-  });
-
-  var results = await Promise.all([
-    fetchSection('logical_reasoning', 20),
-    fetchSection('interpersonal_understanding', 20),
-    fetchSection('non_verbal_reasoning', 10)
-  ]);
-
-  var questions = results[0].concat(results[1]).concat(results[2]);
-  questions.sort(function(a, b) {
-    return (sOrder[a.section] || 9) - (sOrder[b.section] || 9) || a.code.localeCompare(b.code);
-  });
-
-  var counts = {};
-  questions.forEach(function(q) { counts[q.section] = (counts[q.section] || 0) + 1; });
-
-  var today = new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
-  document.getElementById('subtitle').textContent = 'Live question bank review \u2022 ' + today + ' \u2022 ' + questions.length + ' questions \u2022 ' + fbData.length + ' feedback items';
-  document.getElementById('stat-total').textContent = questions.length;
-  document.getElementById('stat-s1').textContent = counts.logical_reasoning || 0;
-  document.getElementById('stat-s2').textContent = counts.interpersonal_understanding || 0;
-  document.getElementById('stat-s3').textContent = counts.non_verbal_reasoning || 0;
-
-  var html = '';
-  var currentSection = '';
-  var qNum = 0;
-
-  questions.forEach(function(q) {
-    if (q.section !== currentSection) {
-      currentSection = q.section;
-      html += '<div class="section-divider" style="background:' + (sColors[q.section] || '#666') + ';">' + esc(sLabels[q.section] || q.section) + ' (' + (counts[q.section] || 0) + ' questions)</div>';
-    }
-    qNum++;
-    var opts = q.options || {};
-    var optKeys = Object.keys(opts).sort();
-    var optsHtml = optKeys.map(function(k) {
-      var isCorrect = k === q.correct_answer;
-      return '<div class="opt ' + (isCorrect ? 'correct' : '') + '"><span class="opt-marker">' + (isCorrect ? '\u2705' : '\u25cb') + '</span><strong>' + k + '.</strong> ' + esc(opts[k]) + '</div>';
-    }).join('');
-
-    var d = q.difficulty_grade || 5;
-    var visual = q.has_visual_asset ? '<span class="badge visual">\ud83d\udcca Visual</span>' : '';
-    var fb = fbMap[q.id] || { a: 0, i: 0, e: 0 };
-    var fbBadges = '';
-    if (fb.a > 0) fbBadges += '<span class="fb-count approve">' + fb.a + ' approved</span> ';
-    if (fb.i > 0) fbBadges += '<span class="fb-count issue">' + fb.i + ' issues</span> ';
-    if (fb.e > 0) fbBadges += '<span class="fb-count edit">' + fb.e + ' suggestions</span> ';
-
-    html += '<div class="qcard" data-section="' + (sBadge[q.section] || '') + '" data-diff="' + diffLabel(d).toLowerCase() + '" id="q-' + q.id + '">';
-    html += '<div class="card-head"><span class="code">#' + qNum + ' \u2014 ' + esc(q.code) + '</span>';
-    html += '<div class="badges"><span class="badge ' + (sBadge[q.section] || '') + '">' + (sBadge[q.section] || '').toUpperCase() + '</span>';
-    html += '<span class="badge cat">' + esc(q.category || '') + '</span>';
-    html += '<span class="badge" style="background:' + diffColor(d) + '20;color:' + diffColor(d) + ';">' + diffLabel(d) + ' (' + d + ')</span>';
-    html += visual + '</div></div>';
-    var stimHtml = '';
-    if (q.stimulus && q.stimulus.text) {
-      var stimLabel = (q.stimulus_type || 'context').replace(/_/g, ' ');
-      var stimText = q.stimulus.text;
-      if (stimText.indexOf('<') !== -1 && (stimText.indexOf('<table') !== -1 || stimText.indexOf('<p>') !== -1 || stimText.indexOf('<br') !== -1)) {
-        stimHtml = '<div class="stimulus"><div class="stim-label">' + esc(stimLabel) + '</div>' + stimText + '</div>';
-      } else {
-        stimHtml = '<div class="stimulus"><div class="stim-label">' + esc(stimLabel) + '</div>' + esc(stimText) + '</div>';
-      }
-    } else if (q.stimulus && q.stimulus.pattern_rule && q.stimulus_type === 'svg_pattern') {
-      stimHtml = '<div class="stimulus"><div class="stim-label">pattern rule</div>' + esc(q.stimulus.pattern_rule) + '</div>';
-    }
-    html += '<div class="card-body">' + stimHtml + '<div class="question">' + esc(q.question_text) + '</div>';
-    html += '<div class="options">' + optsHtml + '</div>';
-    html += '<details class="explanation"><summary>Show Explanation</summary><div class="exp-content">' + esc(q.explanation || 'No explanation available.') + '</div></details>';
-    var detailItems = fbDetails[q.id] || [];
-    var detailHtml = '';
-    if (detailItems.length > 0) {
-      var typeLabel = { approve: 'approve', flag_issue: 'issue', suggest_edit: 'edit' };
-      var typeText = { approve: 'Approved', flag_issue: 'Flagged Issue', suggest_edit: 'Suggested Edit' };
-      detailHtml += '<div class="fb-toggle" onclick="toggleDetails(\'' + q.id + '\')">' + detailItems.length + ' feedback comment' + (detailItems.length > 1 ? 's' : '') + ' \u2014 click to expand</div>';
-      detailHtml += '<div class="fb-details" id="fbd-' + q.id + '">';
-      detailItems.forEach(function(item) {
-        var cls = typeLabel[item.type] || '';
-        var label = typeText[item.type] || item.type;
-        var dateStr = '';
-        if (item.date) { try { dateStr = new Date(item.date).toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch(e) {} }
-        detailHtml += '<div class="fb-detail-item">';
-        detailHtml += '<div class="fb-detail-header"><span class="fb-detail-name">' + esc(item.name || 'Anonymous') + '</span><span class="fb-detail-type ' + cls + '">' + label + '</span></div>';
-        if (item.comment) detailHtml += '<div class="fb-detail-comment">' + esc(item.comment) + '</div>';
-        if (dateStr) detailHtml += '<div class="fb-detail-date">' + dateStr + '</div>';
-        detailHtml += '</div>';
+      // Build sets
+      allFeedback.forEach(function(fb) {
+        reviewedSet.add(fb.question_code);
+        if (fb.feedback_type === 'flag_issue' && fb.status === 'pending') flaggedSet.add(fb.question_code);
       });
-      detailHtml += '</div>';
+
+      updateStats();
+      applyFilters();
+    } catch(err) {
+      document.getElementById('questionsContainer').innerHTML = '<div class="loading" style="color:var(--red)">Error loading questions: ' + err.message + '</div>';
     }
-    html += '<div class="feedback-section"><div class="fb-existing">' + fbBadges + detailHtml + '</div>';
-    html += '<div class="fb-actions">';
-    html += '<button class="fb-btn approve" onclick="openFeedback(\'' + q.id + '\',\'' + esc(q.code) + '\',\'approve\',this)">\u2705 Approve</button>';
-    html += '<button class="fb-btn issue" onclick="openFeedback(\'' + q.id + '\',\'' + esc(q.code) + '\',\'flag_issue\',this)">\u26a0\ufe0f Flag Issue</button>';
-    html += '<button class="fb-btn edit" onclick="openFeedback(\'' + q.id + '\',\'' + esc(q.code) + '\',\'suggest_edit\',this)">\u270f\ufe0f Suggest Edit</button>';
-    html += '</div>';
-    html += '<div class="fb-form" id="fb-' + q.id + '">';
-    html += '<input type="text" class="fb-name" placeholder="Your name" id="name-' + q.id + '">';
-    html += '<textarea class="fb-comment" placeholder="Your comment or suggestion..." id="comment-' + q.id + '"></textarea>';
-    html += '<div class="fb-form-actions"><button class="fb-submit" id="submit-' + q.id + '" onclick="submitFeedback(\'' + q.id + '\')">Submit</button>';
-    html += '<button class="fb-cancel" onclick="closeFeedback(\'' + q.id + '\')">Cancel</button></div>';
-    html += '</div></div></div></div>';
-  });
+  }
 
-  document.getElementById('container').innerHTML = html;
-}
+  function updateStats() {
+    var s1 = allQuestions.filter(function(q) { return q.section === 'logical_reasoning'; }).length;
+    var s2 = allQuestions.filter(function(q) { return q.section === 'interpersonal_understanding'; }).length;
+    var s3 = allQuestions.filter(function(q) { return q.section === 'non_verbal_reasoning'; }).length;
+    document.getElementById('statTotal').textContent = allQuestions.length;
+    document.getElementById('statS1').textContent = s1;
+    document.getElementById('statS2').textContent = s2;
+    document.getElementById('statS3').textContent = s3;
+    document.getElementById('statReviewed').textContent = reviewedSet.size;
+    document.getElementById('statFlagged').textContent = flaggedSet.size;
+    document.getElementById('totalCount').textContent = allQuestions.length;
+    document.getElementById('feedbackCount').textContent = allFeedback.length;
+    var pct = allQuestions.length > 0 ? Math.round((reviewedSet.size / allQuestions.length) * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
 
-function openFeedback(qId, qCode, type, btn) {
-  var form = document.getElementById('fb-' + qId);
-  form.classList.add('visible');
-  activeFeedback[qId] = { type: type, code: qCode };
-  var btns = btn.parentElement.querySelectorAll('.fb-btn');
-  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('selected');
-  btn.classList.add('selected');
-  var comment = document.getElementById('comment-' + qId);
-  comment.placeholder = type === 'approve' ? 'Optional comment...' : 'Describe the issue or your suggestion...';
-  try { var saved = localStorage.getItem('qa_reviewer_name'); if (saved) document.getElementById('name-' + qId).value = saved; } catch(e) {}
-}
-
-function closeFeedback(qId) {
-  document.getElementById('fb-' + qId).classList.remove('visible');
-  delete activeFeedback[qId];
-  var card = document.getElementById('q-' + qId);
-  var btns = card.querySelectorAll('.fb-btn');
-  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('selected');
-}
-
-async function submitFeedback(qId) {
-  var info = activeFeedback[qId];
-  if (!info) return;
-  var name = document.getElementById('name-' + qId).value.trim();
-  var comment = document.getElementById('comment-' + qId).value.trim();
-  if (!name) { showToast('Please enter your name'); return; }
-  if (info.type !== 'approve' && !comment) { showToast('Please add a comment'); return; }
-  try { localStorage.setItem('qa_reviewer_name', name); } catch(e) {}
-  var submitBtn = document.getElementById('submit-' + qId);
-  submitBtn.textContent = 'Submitting...';
-  submitBtn.disabled = true;
-  try {
-    var resp = await sbInsert('qa_feedback', {
-      question_id: qId,
-      question_code: info.code,
-      reviewer_name: name,
-      feedback_type: info.type,
-      comment: comment
-    });
-    if (resp.code) throw new Error(resp.message || resp.code);
-    var form = document.getElementById('fb-' + qId);
-    form.innerHTML = '<div class="fb-success">\u2705 Feedback submitted by ' + esc(name) + '! Thank you.</div>';
-    document.getElementById('q-' + qId).classList.add('submitted');
-    var detailsEl = document.getElementById('fbd-' + qId);
-    var typeLabel = { approve: 'approve', flag_issue: 'issue', suggest_edit: 'edit' };
-    var typeText = { approve: 'Approved', flag_issue: 'Flagged Issue', suggest_edit: 'Suggested Edit' };
-    var cls = typeLabel[info.type] || '';
-    var label = typeText[info.type] || info.type;
-    var now = new Date().toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    var newItem = '<div class="fb-detail-item" style="background:#f0fdf4;">';
-    newItem += '<div class="fb-detail-header"><span class="fb-detail-name">' + esc(name) + ' (just now)</span><span class="fb-detail-type ' + cls + '">' + label + '</span></div>';
-    if (comment) newItem += '<div class="fb-detail-comment">' + esc(comment) + '</div>';
-    newItem += '<div class="fb-detail-date">' + now + '</div></div>';
-    if (detailsEl) {
-      detailsEl.insertAdjacentHTML('afterbegin', newItem);
-      detailsEl.classList.add('visible');
-    } else {
-      var existing = document.querySelector('#q-' + qId + ' .fb-existing');
-      if (existing) {
-        var toggle = document.createElement('div');
-        toggle.className = 'fb-toggle';
-        toggle.setAttribute('onclick', "toggleDetails('" + qId + "')");
-        toggle.textContent = '1 feedback comment \u2014 click to collapse';
-        var details = document.createElement('div');
-        details.className = 'fb-details visible';
-        details.id = 'fbd-' + qId;
-        details.innerHTML = newItem;
-        existing.appendChild(toggle);
-        existing.appendChild(details);
+  function applyFilters() {
+    filteredQuestions = allQuestions.filter(function(q) {
+      if (filters.section !== 'all' && q.section !== filters.section) return false;
+      if (filters.diff !== 'all' && q.difficulty !== filters.diff) return false;
+      if (filters.status === 'unreviewed' && reviewedSet.has(q.code)) return false;
+      if (filters.status === 'flagged' && !flaggedSet.has(q.code)) return false;
+      if (filters.search) {
+        var s = filters.search.toLowerCase();
+        if (q.code.toLowerCase().indexOf(s) === -1 && q.question_text.toLowerCase().indexOf(s) === -1 && (q.category || '').toLowerCase().indexOf(s) === -1) return false;
       }
-    }
-    showToast('Feedback saved for ' + info.code);
-  } catch(e) {
-    showToast('Error: ' + (e.message || 'Unknown error'));
-    submitBtn.textContent = 'Submit';
-    submitBtn.disabled = false;
+      return true;
+    });
+    currentPage = 1;
+    renderPagination();
+    renderQuestions();
   }
-}
 
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
+  function renderPagination() {
+    var totalPages = Math.ceil(filteredQuestions.length / perPage);
+    var html = '';
+    html += '<button class="page-btn" onclick="window._qa.goPage(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>&laquo; Prev</button>';
 
-function toggleDetails(qId) {
-  var el = document.getElementById('fbd-' + qId);
-  if (el) {
-    el.classList.toggle('visible');
-    var toggle = el.previousElementSibling;
-    if (toggle && toggle.classList.contains('fb-toggle')) {
-      var count = el.querySelectorAll('.fb-detail-item').length;
-      var label = count + ' feedback comment' + (count > 1 ? 's' : '');
-      toggle.textContent = el.classList.contains('visible') ? label + ' \u2014 click to collapse' : label + ' \u2014 click to expand';
+    var start = Math.max(1, currentPage - 3);
+    var end = Math.min(totalPages, currentPage + 3);
+    if (start > 1) html += '<button class="page-btn" onclick="window._qa.goPage(1)">1</button><span class="page-info">...</span>';
+    for (var i = start; i <= end; i++) {
+      html += '<button class="page-btn' + (i === currentPage ? ' active' : '') + '" onclick="window._qa.goPage(' + i + ')">' + i + '</button>';
+    }
+    if (end < totalPages) html += '<span class="page-info">...</span><button class="page-btn" onclick="window._qa.goPage(' + totalPages + ')">' + totalPages + '</button>';
+
+    html += '<button class="page-btn" onclick="window._qa.goPage(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>Next &raquo;</button>';
+    html += '<span class="page-info">Showing ' + ((currentPage-1)*perPage+1) + 'â' + Math.min(currentPage*perPage, filteredQuestions.length) + ' of ' + filteredQuestions.length + '</span>';
+
+    document.getElementById('pagination').innerHTML = html;
+    document.getElementById('paginationBottom').innerHTML = html;
+  }
+
+  function renderQuestions() {
+    var start = (currentPage - 1) * perPage;
+    var pageQs = filteredQuestions.slice(start, start + perPage);
+    var html = '';
+    var lastSection = '';
+
+    pageQs.forEach(function(q, idx) {
+      // Section header
+      if (q.section !== lastSection) {
+        lastSection = q.section;
+        var sClass = q.section === 'logical_reasoning' ? 's1' : q.section === 'interpersonal_understanding' ? 's2' : 's3';
+        var sLabel = q.section === 'logical_reasoning' ? 'S1 â Logical Reasoning' : q.section === 'interpersonal_understanding' ? 'S2 â Interpersonal Understanding' : 'S3 â Non-Verbal Reasoning';
+        var sCount = filteredQuestions.filter(function(fq) { return fq.section === q.section; }).length;
+        html += '<div class="section-header ' + sClass + '">' + sLabel + ' (' + sCount + ' questions)</div>';
+      }
+
+      var hasFb = reviewedSet.has(q.code);
+      var qFeedback = allFeedback.filter(function(fb) { return fb.question_code === q.code; });
+      var diffClass = q.difficulty === 'easy' ? 'easy' : q.difficulty === 'medium' ? 'medium' : '';
+
+      html += '<div class="q-card' + (hasFb ? ' has-feedback' : '') + '" id="q-' + q.code + '">';
+
+      // Header
+      html += '<div class="q-card-header">';
+      html += '<span class="q-code">#' + (start + idx + 1) + ' â ' + q.code + '</span>';
+      html += '<div class="q-tags">';
+      html += '<span class="tag tag-section">' + (q.section === 'logical_reasoning' ? 'S1' : q.section === 'interpersonal_understanding' ? 'S2' : 'S3') + '</span>';
+      if (q.category) html += '<span class="tag tag-category">' + q.category + '</span>';
+      html += '<span class="tag tag-diff ' + diffClass + '">' + q.difficulty.toUpperCase() + ' (' + q.difficulty_grade + ')</span>';
+      html += '</div></div>';
+
+      // Stimulus
+      if (q.stimulus && q.stimulus.text) {
+        html += '<div class="stimulus"><div class="stim-label">' + (q.stimulus_type || 'stimulus').replace(/_/g, ' ') + '</div>' + q.stimulus.text + '</div>';
+      }
+
+      // Visual asset for S3
+      if (q.has_visual_asset && q.visual_asset_svg) {
+        html += '<div class="visual-asset">' + q.visual_asset_svg + '</div>';
+      }
+
+      // Question body
+      html += '<div class="q-body">';
+      html += '<div class="q-text">' + q.question_text + '</div>';
+      html += '<div class="options">';
+      if (q.options) {
+        var letters = Object.keys(q.options).sort();
+        letters.forEach(function(letter) {
+          var isCorrect = letter === q.correct_answer;
+          html += '<div class="option' + (isCorrect ? ' correct' : '') + '">';
+          html += '<span class="letter">' + letter + '.</span>';
+          html += '<span>' + q.options[letter] + (isCorrect ? ' â' : '') + '</span>';
+          html += '</div>';
+        });
+      }
+      html += '</div></div>';
+
+      // Explanation
+      html += '<details class="explanation"><summary>View Explanation</summary><p style="margin-top:8px">' + (q.explanation || 'No explanation available.') + '</p></details>';
+
+      // Existing feedback
+      if (qFeedback.length > 0) {
+        qFeedback.forEach(function(fb) {
+          html += '<div class="existing-feedback">';
+          html += '<span class="fb-type">' + fb.feedback_type.replace(/_/g, ' ') + '</span>';
+          html += ' by <strong>' + fb.reviewer_name + '</strong>';
+          html += ' (' + fb.status + ')';
+          if (fb.comment) html += ': ' + fb.comment;
+          html += '</div>';
+        });
+      }
+
+      // Action buttons
+      html += '<div class="q-actions">';
+      html += '<button class="action-btn approve" onclick="window._qa.feedback(\'' + q.code + '\',\'' + q.id + '\',\'approve\',this)">Approve</button>';
+      html += '<button class="action-btn flag" onclick="window._qa.feedback(\'' + q.code + '\',\'' + q.id + '\',\'flag_issue\',this)">Flag Issue</button>';
+      html += '<button class="action-btn edit" onclick="window._qa.showForm(\'' + q.code + '\',\'' + q.id + '\')">Suggest Edit</button>';
+      html += '</div>';
+
+      // Feedback form (hidden)
+      html += '<div class="feedback-form" id="form-' + q.code + '">';
+      html += '<textarea id="comment-' + q.code + '" placeholder="Describe the issue or suggested change..."></textarea>';
+      html += '<div class="form-actions">';
+      html += '<button class="submit-btn" onclick="window._qa.submitForm(\'' + q.code + '\',\'' + q.id + '\')">Submit Feedback</button>';
+      html += '<button class="cancel-btn" onclick="window._qa.hideForm(\'' + q.code + '\')">Cancel</button>';
+      html += '</div></div>';
+
+      html += '</div>';
+    });
+
+    if (pageQs.length === 0) {
+      html = '<div class="loading">No questions match the current filters.</div>';
+    }
+
+    document.getElementById('questionsContainer').innerHTML = html;
+    window.scrollTo(0, 0);
+  }
+
+  // Feedback functions
+  async function submitFeedback(code, qId, type, comment) {
+    var reviewer = document.getElementById('reviewerName').value.trim();
+    if (!reviewer) { showToast('Please enter your name first', 'error'); return; }
+    try { localStorage.setItem('qa_reviewer', reviewer); } catch(e) {}
+
+    try {
+      var res = await sb.from('qa_feedback').insert({
+        question_id: qId,
+        question_code: code,
+        reviewer_name: reviewer,
+        feedback_type: type,
+        comment: comment || (type === 'approve' ? 'Approved' : ''),
+        status: 'pending'
+      });
+      if (res.error) throw res.error;
+
+      reviewedSet.add(code);
+      if (type === 'flag_issue') flaggedSet.add(code);
+      allFeedback.unshift({ question_code: code, question_id: qId, reviewer_name: reviewer, feedback_type: type, comment: comment, status: 'pending', created_at: new Date().toISOString() });
+      updateStats();
+      renderQuestions();
+      showToast('Feedback submitted for ' + code, 'success');
+    } catch(err) {
+      showToast('Error: ' + err.message, 'error');
     }
   }
-}
 
-// Filter buttons
-document.querySelectorAll('.fbtn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    var filterType = btn.dataset.filter;
-    var val = btn.dataset.val;
-    currentFilter[filterType] = val;
-    var siblings = document.querySelectorAll('.fbtn[data-filter="' + filterType + '"]');
-    siblings.forEach(function(s) { s.classList.remove('active'); });
-    btn.classList.add('active');
-    applyFilters();
-  });
-});
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(function() { t.className = 'toast'; }, 3000);
+  }
 
-function applyFilters() {
-  var cards = document.querySelectorAll('.qcard');
-  cards.forEach(function(card) {
-    var secMatch = currentFilter.section === 'all' || card.dataset.section === currentFilter.section;
-    var diffMatch = currentFilter.diff === 'all' || card.dataset.diff === currentFilter.diff;
-    card.style.display = (secMatch && diffMatch) ? '' : 'none';
-  });
-  document.querySelectorAll('.section-divider').forEach(function(div) {
-    div.style.display = currentFilter.section === 'all' ? '' : 'none';
-  });
-}
+  // Public API
+  window._qa = {
+    goPage: function(p) {
+      var totalPages = Math.ceil(filteredQuestions.length / perPage);
+      if (p < 1 || p > totalPages) return;
+      currentPage = p;
+      renderPagination();
+      renderQuestions();
+    },
+    feedback: function(code, qId, type, btn) {
+      if (type === 'approve') {
+        submitFeedback(code, qId, 'approve', 'Approved');
+      } else if (type === 'flag_issue') {
+        var form = document.getElementById('form-' + code);
+        form.classList.add('visible');
+        form.dataset.type = 'flag_issue';
+      }
+    },
+    showForm: function(code, qId) {
+      var form = document.getElementById('form-' + code);
+      form.classList.add('visible');
+      form.dataset.type = 'suggest_edit';
+    },
+    hideForm: function(code) {
+      document.getElementById('form-' + code).classList.remove('visible');
+    },
+    submitForm: function(code, qId) {
+      var comment = document.getElementById('comment-' + code).value.trim();
+      if (!comment) { showToast('Please enter a comment', 'error'); return; }
+      var form = document.getElementById('form-' + code);
+      var type = form.dataset.type || 'suggest_edit';
+      submitFeedback(code, qId, type, comment);
+      form.classList.remove('visible');
+    }
+  };
 
-// Load on page ready
-loadQuestions();
+  // Filter click handlers
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var filterType = this.dataset.filter;
+      var value = this.dataset.value;
+      filters[filterType] = value;
+      // Update active state
+      document.querySelectorAll('.filter-btn[data-filter="' + filterType + '"]').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      applyFilters();
+    });
+  });
+
+  // Search handler
+  var searchTimer;
+  document.getElementById('searchBox').addEventListener('input', function() {
+    clearTimeout(searchTimer);
+    var val = this.value;
+    searchTimer = setTimeout(function() { filters.search = val; applyFilters(); }, 300);
+  });
+
+  // Start
+  loadAll();
+})();
 </script>
 </body>
 </html>
