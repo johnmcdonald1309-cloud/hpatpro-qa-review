@@ -213,7 +213,7 @@
   async function loadAll() {
     try {
       // Fetch all questions (Supabase default limit is 1000, we have 447)
-      var qRes = await sb.from('questions').select('id,code,section,category,difficulty,difficulty_grade,stimulus_type,stimulus,question_text,options,correct_answer,explanation,has_visual_asset,visual_asset_svg').order('section').order('code');
+      var qRes = await sb.from('questions').select('id,code,section,category,difficulty,difficulty_grade,stimulus_type,stimulus,question_text,options,correct_answer,explanation,has_visual_asset,visual_asset_svg').eq('is_active', true).order('section').order('code');
 
       if (qRes.error) throw qRes.error;
       allQuestions = qRes.data || [];
